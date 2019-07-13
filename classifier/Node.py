@@ -20,14 +20,24 @@ class Node(object):
             self.weights = [uniform(0, number_of_inputs) for _ in range(number_of_inputs)]
 
     def forward_update(self, weighted_input):
+        """
+        :param weighted_input: the dot product of this node's weights with the previous layer's node values
+
+        Updates the value of this node with the dot product, and subsequently the activated value
+        """
         self.value = weighted_input
-        self.apply_activation_function()
+        self.__apply_activation_function()
 
     def set_activation_function(self, activation_function):
+        """
+        :param activation_function: The name of the activation function to be used for the node
+        """
         self.activation_function = activation_function
 
-    def apply_activation_function(self):
-        print("Applying %s activation function" % (self.activation_function))
+    def __apply_activation_function(self):
+        """
+        Applies the activation function to the value in the node
+        """
         if self.activation_function is None:
             raise ValueError('Please specify an activation function')
         if self.activation_function == 'sigmoid':
