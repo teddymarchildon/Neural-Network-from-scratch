@@ -13,8 +13,9 @@ class Layer(object):
 
     def __init__(self, size, input_shape=None):
         """
-        :param size: the number of nodes in this layer
-        :param input_shape: the shape of the input layer
+        :param size: type int. the number of nodes in this layer
+        :param input_shape: type int. the shape of the input layer
+        TODO Change input shape to accept a list so that we can put in a ton of samples at once
         """
         self.size = size
         self.nodes = []
@@ -24,7 +25,7 @@ class Layer(object):
 
     def forward_update(self, node_input_values):
         """
-        :param node_input_values: the values of the previous layer nodes
+        :param node_input_values: type list(float). the values of the previous layer nodes
         
         This function updates the current layer with the previous layer inputs
         during feed forward step.
@@ -44,7 +45,7 @@ class Layer(object):
 
     def __forward_update_softmax(self, weighted_sums):
         """
-        :param weighted_sums: the dot product of each node's weights with the input nodes' values
+        :param weighted_sums: type list(float). the dot product of each node's weights with the input nodes' values
 
         This function applies the softmax function to the nodes in the layer
         """
@@ -55,7 +56,7 @@ class Layer(object):
 
     def set_values(self, values):
         """
-        :param values: The input values to the entire network
+        :param values: type list(float). The input values to the entire network
 
         This function sets the input values of the entire network
         """
@@ -71,7 +72,7 @@ class Layer(object):
 
     def set_activation_function(self, function_name):
         """
-        :param function_name: The name of the activation function
+        :param function_name: type str. The name of the activation function
 
         Sets the activation function to be used for this layer and nodes within it
         """

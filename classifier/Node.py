@@ -1,5 +1,5 @@
 from random import uniform
-import activation_functions
+from activation_functions import sigmoid, relu
 
 class Node(object):
     """
@@ -8,7 +8,7 @@ class Node(object):
 
     def __init__(self, number_of_inputs=None):
         """
-        :param number_of_inputs: the number of inputs into this node
+        :param number_of_inputs: type int. the number of inputs into this node
         
         The weights here are represented as an array, where the value at
         i is the weight between this node, and the ith previous node
@@ -21,7 +21,7 @@ class Node(object):
 
     def forward_update(self, weighted_input):
         """
-        :param weighted_input: the dot product of this node's weights with the previous layer's node values
+        :param weighted_input: type int. the dot product of this node's weights with the previous layer's node values
 
         Updates the value of this node with the dot product, and subsequently the activated value
         """
@@ -30,7 +30,7 @@ class Node(object):
 
     def set_activation_function(self, activation_function):
         """
-        :param activation_function: The name of the activation function to be used for the node
+        :param activation_function: type str. The name of the activation function to be used for the node
         """
         self.activation_function = activation_function
 
@@ -41,9 +41,8 @@ class Node(object):
         if self.activation_function is None:
             raise ValueError('Please specify an activation function')
         if self.activation_function == 'sigmoid':
-            self.value = activation_functions.sigmoid(self.value)
+            self.value = sigmoid(self.value)
         elif self.activation_function == 'relu':
-            self.value = activation_functions.relu(self.value)
+            self.value = relu(self.value)
         else:
             raise ValueError('Activation Function not found')
-

@@ -8,16 +8,32 @@ class Network(object):
     """
 
     def __init__(self):
+        """
+        Create the Network object
+        """
         self.layers = []
 
     def add_layer(self, layer):
-        if layer is not None:
-            self.layers.append(layer)
+        """
+        :param layer: type Layer. A layer to be added to the network
+        """
+        if layer is None:
+            raise ValueError("Make sure you create a layer before adding it to the network")
+        self.layers.append(layer)
 
     def feed_forward(self, starting_layer_number):
+        """
+        :param starting_layer_number: type int. The starting layer for 
+                        feed forward. Recursively updated.
+        """
+        if starting_layer_number < 1 or starting_layer_number > len(self.layers):
+            raise ValueError("Make sure the starting layer is within the network")
+
         if starting_layer_number == len(self.layers):
             return
 
+        # We will never do any forward updating on the input layer
+        # because it only occurs on the next layer
         starting_layer = self.layers[starting_layer_number - 1]
         input_values = [n.value for n in starting_layer.nodes]
 
