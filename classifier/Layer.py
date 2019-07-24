@@ -48,7 +48,7 @@ class Layer(object):
 
     def forward_update(self, node_input_values):
         """
-        :param node_input_values: type list(float). the values of the previous layer nodes
+        :param node_input_values: type list(float). the output values of the nodes in the previous layer
         
         This function updates the current layer with the previous layer inputs
         during feed forward step.
@@ -56,15 +56,14 @@ class Layer(object):
         It applies the activation function over the nodes in the layer.
         """
         print("Applying %s activation function" % (self.activation_function))
-        if self.activation_function == 'softmax': # Softmax requires knowledge of all nodes, so we appy it here
-            weighted_sums = []
-            for node in self.nodes:
-                weighted_sums.append(dot_product(node_input_values, node.weights))
-            self.__forward_update_softmax(weighted_sums)
-        else: # Other activation functions only pertain to the individual node, so we can update within the node
-            for node in self.nodes:
-                weighted_sum = dot_product(node_input_values, node.weights)
-                node.forward_update(weighted_sum)
+        layer_input_matrix = []
+        for node in self.nodes:
+            input_for_node = dot_product(node_input_values, node.weights)
+            layer_input_matrix.append(input_for_node)
+        # We want to cache the inputs to this layer so it can be used in back propagation
+        self.layer_input_matrix = layer_input_matrix
+
+        self.__forward_update(layer_input_matrix)
 
     def back_propagate(self):
         """
@@ -109,37 +108,30 @@ class Layer(object):
         Sets the activation function to be used for this layer and nodes within it
         """
         self.activation_function = function_name
-        for node in self.nodes:
-            node.set_activation_function(function_name)
-    
-    def set_loss_function(self, loss_function_name):
-        """
-        :param loss_function_name: type str. The name of the loss function
-        """
-        self.loss_function = loss_function_name
     
     def calculate_total_loss(self):
         """
         Calculate the loss for this layer
-
-        TODO calculate the loss for a hidden layer
         """
+        if not self.is_output_layer:
+            return 0.0
         loss = 0
         for i in range(len(self.nodes)):
             if self.is_output_layer:
                 loss += square_error(self.nodes[i].value, self.expected_output_values[i])
         return loss
 
-    def __forward_update_softmax(self, weighted_sums):
+    def __forward_update(self, layer_input_matrix):
         """
         :param weighted_sums: type list(float). the dot product of each node's weights with the input nodes' values
 
         This function applies the softmax function to the nodes in the layer
         """
-        updated_values = softmax(weighted_sums)
-        for i in range(len(weighted_sums)):
-            node = self.nodes[i]
-            node.value = updated_values[i]
+        layer_output_matrix = []
+        for i in range(len(self.nodes)):
+            self.nodes[i].forward_update(self.activation_function, layer_input_matrix, i)
+            layer_output_matrix.append(self.nodes[i].value)
+        self.layer_output_matrix = layer_output_matrix
 
     def __back_propagate_softmax(self):
         """
@@ -189,7 +181,7 @@ class Layer(object):
                 previous_activation_value = self.previous_layer.nodes[i].value
 
                 total_differential = square_error_loss_differential * activation_differential * previous_activation_value
-                current_node.weights[i] = total_differential * 0.001
+                current_node.weights[i] = total_differential * 0.01
     
     def __back_propagate_relu(self):
         """
@@ -207,4 +199,4 @@ class Layer(object):
                 previous_activation_value = self.previous_layer.nodes[i].value
 
                 total_differential = square_error_loss_differential * activation_differential * previous_activation_value
-                current_node.weights[i] = total_differential * 0.001
+                current_node.weights[i] = total_differential * 0.01

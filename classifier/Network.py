@@ -20,7 +20,7 @@ class Network(object):
         :param layer: type Layer. A layer to be added to the network
         """
         if layer is None:
-            raise ValueError("Make sure you create a layer before adding it to the network")
+            raise ValueError('Make sure you create a layer before adding it to the network')
         if len(self.layers) is 0:
             layer.set_as_input_layer()
             self.layers.append(layer)
@@ -45,7 +45,7 @@ class Network(object):
 
     def set_input_values(self, input_values):
         """
-        :param input_values: type list. The input values for the neural network
+        :param input_values: type list. The input values for the network
 
         TODO ensure it is the same shape as the input layer
         """
@@ -75,12 +75,8 @@ class Network(object):
         """
         Function for back propagating the neural network
         """
-        print("Back propagating")
+        print('Back propagating')
         self.__back_propagate_recursive(starting_layer_number=len(self.layers))
-
-    def set_loss_function(self, loss_function_name):
-        self.loss_function = loss_function_name
-        self.__set_loss_function_in_layers()
 
     def __feed_forward_recursively(self, starting_layer_number):
         """
@@ -88,18 +84,20 @@ class Network(object):
                         feed forward. Recursively updated.
         """
         if starting_layer_number == len(self.layers):
+            loss = self.layers[len(self.layers) - 1].calculate_total_loss()
+            print(f'Loss at output: {loss}')
             return
 
         # We will never do any forward updating on the input layer
         # because it only occurs on the next layer
         starting_layer = self.layers[starting_layer_number - 1]
-        input_values = [n.value for n in starting_layer.nodes]
+        initial_node_values = [n.value for n in starting_layer.nodes]
 
         next_layer = self.layers[starting_layer_number]
-        next_layer.forward_update(input_values)
+        next_layer.forward_update(initial_node_values)
 
         print([node.value for node in next_layer.nodes])
-        print("done with layer: ", starting_layer_number)
+        print(f'done with layer: {starting_layer_number}')
 
         self.__feed_forward_recursively(starting_layer_number + 1)
     
@@ -107,14 +105,8 @@ class Network(object):
         if starting_layer_number == 1:
             return
         current_layer = self.layers[starting_layer_number - 1]
-        loss = current_layer.calculate_total_loss()
-        print("Loss for layer: ", starting_layer_number, " is: ", loss)
         current_layer.back_propagate()
         self.__back_propagate_recursive(starting_layer_number - 1)
-
-    def __set_loss_function_in_layers(self):
-        for layer in self.layers:
-            layer.set_loss_function(self.loss_function)
 
 
 if __name__ == "__main__":

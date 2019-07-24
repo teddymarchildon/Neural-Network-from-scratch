@@ -1,5 +1,5 @@
 from random import uniform
-from activation_functions import sigmoid, relu
+from activation_functions import sigmoid, relu, softmax
 
 class Node(object):
     """
@@ -19,30 +19,28 @@ class Node(object):
         else:
             self.weights = [uniform(0, number_of_inputs) for _ in range(number_of_inputs)]
 
-    def forward_update(self, weighted_input):
+    def forward_update(self, activation_function, layer_input_matrix, index):
         """
         :param weighted_input: type int. the dot product of this node's weights with the previous layer's node values
 
         Updates the value of this node with the dot product, and subsequently the activated value
         """
-        self.value = weighted_input
-        self.__apply_activation_function()
+        self.value = layer_input_matrix[index]
+        self.__apply_activation_function(activation_function, layer_input_matrix, index)
 
-    def set_activation_function(self, activation_function):
+    def __apply_activation_function(self, activation_function, layer_input_matrix, index):
         """
-        :param activation_function: type str. The name of the activation function to be used for the node
-        """
-        self.activation_function = activation_function
+        :param layer_input_matrix: type list. The input values to the nodes in this layer,
+            the weighted sum of the previous layer's nodes and the weights in each node in this layer
+        :param index: The index of this node in the layer matrix
 
-    def __apply_activation_function(self):
-        """
         Applies the activation function to the value in the node
         """
-        if self.activation_function is None:
-            raise ValueError('Please specify an activation function')
-        if self.activation_function == 'sigmoid':
+        if activation_function == 'sigmoid':
             self.value = sigmoid(self.value)
-        elif self.activation_function == 'relu':
+        elif activation_function == 'relu':
             self.value = relu(self.value)
+        elif activation_function == 'softmax':
+            self.value = softmax(layer_input_matrix)[index]
         else:
             raise ValueError('Activation Function not found')
