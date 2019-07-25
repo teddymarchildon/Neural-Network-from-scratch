@@ -28,9 +28,7 @@ class Layer(object):
         self.previous_layer = None
         self.next_layer = None
         self.set_learning_rate()
-        self.nodes = []
-        for _ in range(number_of_nodes):
-            self.nodes.append(Node(number_of_inputs=number_of_inputs))
+        self.nodes = [Node(number_of_inputs=number_of_inputs) for _ in range(number_of_nodes)]
 
     def forward_update(self, node_input_values):
         """
@@ -42,14 +40,9 @@ class Layer(object):
         It applies the activation function over the nodes in the layer.
         """
         # print("Applying %s activation function" % (self.activation_function))
-        layer_input_matrix = []
-        for node in self.nodes:
-            input_for_node = dot_product(node_input_values, node.weights)
-            layer_input_matrix.append(input_for_node)
+        self.layer_input_matrix = [dot_product(node_input_values, node.weights) for node in self.nodes]
         # We want to cache the inputs to this layer so it can be used in back propagation
-        self.layer_input_matrix = layer_input_matrix
-
-        self.__forward_update(layer_input_matrix)
+        self.__forward_update(self.layer_input_matrix)
 
     def back_propagate(self):
         """
