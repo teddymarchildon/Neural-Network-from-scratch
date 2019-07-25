@@ -1,6 +1,7 @@
 """
 Defines a set of functions to be used on various math structures
 """
+
 def dot_product(vector1, vector2):
 	"""
 	:param vector1: the first matrix in the dot product
@@ -18,14 +19,12 @@ def dot_product(vector1, vector2):
 	
 	return sum
 
-
 def scalar_product(scalar, matrix):
 	"""
 	:input scalar: the factor to multiply the matrix with
 	:input matrix: the matrix to be scaled
 	:return: a new matrix scaled by the factor
 	"""
-
 	if len(matrix) == 0:
 		raise ValueError("Input matrix should have length")
 	
@@ -38,14 +37,12 @@ def scalar_product(scalar, matrix):
 	
 	return result
 
-
 def add_matrix(matrix1, matrix2):
 	"""
 	:param matrix1: the left matrix in the addition
 	:param matrix2: the right matrix in the addition, although of course order does not matter
 	:return: a new matrix with the addition performed
 	"""
-
 	if len(matrix1) == 0 or len(matrix1) != len(matrix2) or len(matrix1[0]) != len(matrix2[0]):
 		raise ValueError("Input matrices should be of the same dimension")
 	
@@ -57,7 +54,6 @@ def add_matrix(matrix1, matrix2):
 			result[i][j] = matrix1[i][j] + matrix2[i][j]
 
 	return result
-
 
 def multiply_matrix(matrix1, matrix2):
 	"""
