@@ -47,23 +47,37 @@ class Network(object):
         """
         :param input_values: type list. The input values for the network
 
-        TODO ensure it is the same shape as the input layer
+        TODO calculate the number of training samples here to be used in backprop
         """
-        self.layers[0].set_input_values(input_values)
+        if input_values is None or len(input_values) == 0:
+            raise ValueError('Please ensure the input values are populated.')
+        if type(input_values[0]) is not list:
+            raise ValueError('Please use a double array for your input values.')
+
+        self.num_samples = len(input_values)
+        self.num_input_nodes = len(input_values[0])
+        
+        self.network_input = input_values
+        # Process the first set of data
+        self.layers[0].set_input_values(input_values[0])
 
     def set_expected_output_values(self, expected_output_values):
         """
         :param expected_output_values: type list. The expected output values of the network
-
-        TODO ensure it is the same shape as the output layer we have / will have
         """
-        self.layers[len(self.layers) - 1].set_expected_output_values(expected_output_values)
+        if expected_output_values is None or len(expected_output_values) == 0:
+            raise ValueError('Please ensure the output values are populated.')
+        if type(expected_output_values[0]) is not list:
+            raise ValueError('Please use a double array for your output values.')
+        
+        self.layers[len(self.layers) - 1].set_expected_output_values(expected_output_values[0])
 
     def set_learning_rate(self, learning_rate):
         """
         :param learning_rate: type float. The learning rate for the network
         """
-        self.learning_rate = learning_rate
+        for layer in self.layers:
+            layer.set_learning_rate(learning_rate)
 
     def feed_forward(self):
         """
@@ -102,6 +116,11 @@ class Network(object):
         self.__feed_forward_recursively(starting_layer_number + 1)
     
     def __back_propagate_recursive(self, starting_layer_number):
+        """
+        :param starting_layer_number: type int. The layer to start back propagation
+
+        Recursively applies back propagation through the network until the input layer.
+        """
         if starting_layer_number == 1:
             print('Reached input layer; done back propagating')
             return
@@ -112,20 +131,22 @@ class Network(object):
 
 
 if __name__ == "__main__":
-    input_values = [2, 4, 6, 8, 10, 12, 14, 15]
-    output_values = [1, 0]
+    input_values = [[2, 4, 6, 8, 10, 12, 14, 15]]
+    output_values = [[1, 0]]
 
     network = Network()
-    layer1 = Layer(number_of_nodes=len(input_values)) # input layer - we don't need an activation function here
 
-    layer2 = Layer(number_of_nodes=4, number_of_inputs=len(input_values)) # hidden layer
+    # input layer - we don't need an activation function here
+    layer1 = Layer(number_of_nodes=len(input_values[0]))
+
+    layer2 = Layer(number_of_nodes=4, number_of_inputs=len(input_values[0])) # hidden layer
     layer2.set_activation_function('sigmoid')
 
     layer3 = Layer(number_of_nodes=2, number_of_inputs=4)
     layer3.set_activation_function('relu')
 
     # The output layer should use softmax for conversion to probabilities
-    layer4 = Layer(number_of_nodes=len(output_values), number_of_inputs=2)
+    layer4 = Layer(number_of_nodes=len(output_values[0]), number_of_inputs=2)
     layer4.set_activation_function('softmax')
 
     network.add_layer(layer1)
@@ -136,6 +157,8 @@ if __name__ == "__main__":
     network.set_input_values(input_values)
     network.set_expected_output_values(output_values)
 
-    network.feed_forward() # feed forward from input to layer 2
-    print('\n')
-    network.back_propagate()
+    for i in range(10):
+        network.feed_forward() # feed forward from input to layer 2
+        print('\n')
+        network.back_propagate()
+        print(f'Done with round: {i}')

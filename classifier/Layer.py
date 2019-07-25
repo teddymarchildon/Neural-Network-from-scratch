@@ -29,20 +29,9 @@ class Layer(object):
         self.is_output_layer = False
         self.previous_layer = None
         self.next_layer = None
+        self.set_learning_rate()
         for _ in range(number_of_nodes):
             self.nodes.append(Node(number_of_inputs=number_of_inputs))
-
-    def set_as_input_layer(self):
-        self.is_input_layer = True
-        self.is_output_layer = False
-
-    def set_as_hidden_layer(self):
-        self.is_input_layer = False
-        self.is_output_layer = False
-
-    def set_as_output_layer(self):
-        self.is_input_layer = False
-        self.is_output_layer = True
 
     def forward_update(self, node_input_values):
         """
@@ -65,13 +54,26 @@ class Layer(object):
 
     def back_propagate(self):
         """
+        Apply back propagation to this layer
         """
         if self.activation_function == 'softmax':
             self.__back_propagate_softmax()
         elif self.activation_function == 'sigmoid':
-            self.__back_propagate_sigmoid()
+            self.__back_propagate_hidden_layer(activation_function_differential=sigmoid_differential)
         elif self.activation_function == 'relu':
-            self.__back_propagate_relu()
+            self.__back_propagate_hidden_layer(activation_function_differential=relu_differential)
+
+    def calculate_total_loss(self):
+        """
+        Calculate the loss for this layer
+        """
+        if not self.is_output_layer:
+            return 0.0
+        loss = 0
+        for i in range(len(self.nodes)):
+            if self.is_output_layer:
+                loss += square_error(self.nodes[i].value, self.expected_output_values[i])
+        return loss
 
     def set_input_values(self, values):
         """
@@ -106,33 +108,38 @@ class Layer(object):
         Sets the activation function to be used for this layer and nodes within it
         """
         self.activation_function = function_name
-    
-    def calculate_total_loss(self):
-        """
-        Calculate the loss for this layer
-        """
-        if not self.is_output_layer:
-            return 0.0
-        loss = 0
-        for i in range(len(self.nodes)):
-            if self.is_output_layer:
-                loss += square_error(self.nodes[i].value, self.expected_output_values[i])
-        return loss
 
-    def calculate_differential_loss_matrix(self):
+    def set_as_input_layer(self):
         """
-        Used in the output layer.
+        Update the appropriate instance variables for the input layer
+        """
+        self.is_input_layer = True
+        self.is_output_layer = False
 
-        We know the square error loss function is used,
-        so we will use the differential of that function
+    def set_as_hidden_layer(self):
         """
-        if not self.is_output_layer:
-            return
-        differential_loss_matrix = []
-        for i in range(len(self.nodes)):
-            differential_node_loss = square_error_differential(self.layer_output_matrix[i], self.expected_output_values[i])
-            differential_loss_matrix.append(differential_node_loss)
-        self.differential_loss_matrix = differential_loss_matrix
+        Update the appropriate instance variables for a hidden layer
+        """
+        self.is_input_layer = False
+        self.is_output_layer = False
+
+    def set_as_output_layer(self):
+        """
+        Update the appropriate instance variables for the output layer
+        """
+        self.is_input_layer = False
+        self.is_output_layer = True
+
+    def set_learning_rate(self, learning_rate=0.01):
+        """
+        :param learning_rate: type float. The learning rate for the layer
+
+        Set the learning rate for the layer
+        """
+        if learning_rate < 0.001 or learning_rate > 0.1:
+            raise ValueError('Learning rate should be between 0.001 and 0.1.')
+        
+        self.learning_rate = learning_rate
 
     def __forward_update(self, layer_input_matrix):
         """
@@ -188,18 +195,19 @@ class Layer(object):
                 and update the weight for which we are considering
                 '''
                 total_differential = loss_differential * activation_differential * previous_activation_value
-                current_node.weights[i] = current_node.weights[i] - (total_differential * 0.01)
+                current_node.weights[i] = current_node.weights[i] - (total_differential * self.learning_rate)
             
             print(f'after back prop on node {current_index}')
             print(current_node.weights)
             print('\n')
 
-    def __back_propagate_sigmoid(self):
+    def __back_propagate_hidden_layer(self, activation_function_differential):
         """
+        :param activation_function_differential: type function. The differential of the 
+                                                activation function in the layer
+
         We know we are in a hidden layer here, so we do the calculation
         a bit differently.
-
-
         """
         self.loss_differentials_wrt_activation_output = []
         self.activation_differentials_wrt_node_input = []
@@ -210,7 +218,7 @@ class Layer(object):
             print(f'before back prop on node {current_index}')
             print(current_node.weights)
 
-            activation_differential = sigmoid_differential(self.layer_input_matrix[current_index])
+            activation_differential = activation_function_differential(self.layer_input_matrix[current_index])
 
             self.activation_differentials_wrt_node_input.append(activation_differential)
             
@@ -226,45 +234,7 @@ class Layer(object):
             for i in range(len(current_node.weights)):
                 previous_activation_value = self.previous_layer.nodes[i].value
                 total_differential = loss_differential * activation_differential * previous_activation_value
-                current_node.weights[i] = current_node.weights[i] - (total_differential * 0.01)
-    
-            print(f'after back prop on node {current_index}')
-            print(current_node.weights)
-            print('\n')
-
-    def __back_propagate_relu(self):
-        """
-        We know we are in a hidden layer here, so we do the calculation
-        somewhat differently.
-
-        
-        """
-        self.loss_differentials_wrt_activation_output = []
-        self.activation_differentials_wrt_node_input = []
-
-        for current_index in range(len(self.nodes)):
-            current_node = self.nodes[current_index]
-            
-            print(f'before back prop on node {current_index}')
-            print(current_node.weights)
-
-            activation_differential = relu_differential(self.layer_input_matrix[current_index])
-
-            self.activation_differentials_wrt_node_input.append(activation_differential)
-            
-            loss_differential = 0
-            for next_node_index in range(len(self.next_layer.nodes)):
-                next_layer_loss_differential = self.next_layer.loss_differentials_wrt_activation_output[next_node_index]
-                next_layer_activation_differential = self.next_layer.activation_differentials_wrt_node_input[next_node_index]
-                weight_between_this_node_and_that_node = self.next_layer.nodes[next_node_index].weights[current_index]
-                loss_differential += (next_layer_loss_differential * next_layer_activation_differential * weight_between_this_node_and_that_node)
-            
-            self.loss_differentials_wrt_activation_output.append(loss_differential)
-
-            for i in range(len(current_node.weights)):
-                previous_activation_value = self.previous_layer.nodes[i].value
-                total_differential = loss_differential * activation_differential * previous_activation_value
-                current_node.weights[i] = current_node.weights[i] - (total_differential * 0.01)
+                current_node.weights[i] = current_node.weights[i] - (total_differential * self.learning_rate)
     
             print(f'after back prop on node {current_index}')
             print(current_node.weights)

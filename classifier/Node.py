@@ -15,6 +15,7 @@ class Node(object):
         i is the weight between this node, and the ith previous node
         """
         self.value = 0
+        # randomly initialize the weights
         self.weights = [uniform(0, number_of_inputs) for _ in range(number_of_inputs)]
 
     def forward_update(self, activation_function, layer_input_matrix, index):
