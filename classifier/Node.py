@@ -1,4 +1,5 @@
 from random import uniform
+from math import sqrt
 from activation_functions import sigmoid, relu, softmax
 
 class Node(object):
@@ -13,10 +14,18 @@ class Node(object):
         
         The weights here are represented as an array, where the value at
         i is the weight between this node, and the ith previous node
+
+        We are going to use Xavier initialization in order to reduce the 
+        unstable gradient issues that may arise. This centers the variance
+        of the weights coming into this node at 1 / number of inputs to 
+        the node.
         """
         self.value = 0
-        # randomly initialize the weights
-        self.weights = [uniform(0, number_of_inputs) for _ in range(number_of_inputs)]
+        if number_of_inputs > 0:
+            xavier_coefficient = sqrt(1 / number_of_inputs)
+            self.weights = [uniform(-1, 1)*xavier_coefficient for _ in range(number_of_inputs)]
+        else: # No weights coming into a node in the input layer
+            self.weights = []
 
     def forward_update(self, activation_function, layer_input_matrix, index):
         """

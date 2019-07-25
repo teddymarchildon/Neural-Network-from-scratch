@@ -21,7 +21,6 @@ class Layer(object):
     def __init__(self, number_of_nodes, number_of_inputs=0):
         """
         :param size: type int. the number of nodes in this layer
-        TODO Change input shape to accept a list so that we can put in a ton of samples at once
         """
         self.number_of_nodes = number_of_nodes
         self.nodes = []
@@ -35,7 +34,7 @@ class Layer(object):
 
     def forward_update(self, node_input_values):
         """
-        :param node_input_values: type list(float). the output values of the nodes in the previous layer
+        :param node_input_values: type list(float). The output values of the nodes in the previous layer
 
         This function updates the current layer with the previous layer inputs
         during feed forward step.
@@ -65,6 +64,8 @@ class Layer(object):
 
     def calculate_total_loss(self):
         """
+        :return: type float. The total loss in the output layer, 0
+            if other layer (loss should never really be 0)
         Calculate the loss for this layer
         """
         if not self.is_output_layer:
