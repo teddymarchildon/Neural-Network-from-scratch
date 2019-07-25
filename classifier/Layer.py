@@ -18,21 +18,19 @@ class Layer(object):
     of the weights with the input
     """
 
-    def __init__(self, size, input_shape=None):
+    def __init__(self, number_of_nodes, number_of_inputs=0):
         """
         :param size: type int. the number of nodes in this layer
-        :param input_shape: type int. the shape of the input layer
         TODO Change input shape to accept a list so that we can put in a ton of samples at once
         """
-        self.size = size
+        self.number_of_nodes = number_of_nodes
         self.nodes = []
-        self.input_shape = input_shape
         self.is_input_layer = False
         self.is_output_layer = False
         self.previous_layer = None
         self.next_layer = None
-        for _ in range(size):
-            self.nodes.append(Node(number_of_inputs=input_shape))
+        for _ in range(number_of_nodes):
+            self.nodes.append(Node(number_of_inputs=number_of_inputs))
 
     def set_as_input_layer(self):
         self.is_input_layer = True
@@ -49,7 +47,7 @@ class Layer(object):
     def forward_update(self, node_input_values):
         """
         :param node_input_values: type list(float). the output values of the nodes in the previous layer
-        
+
         This function updates the current layer with the previous layer inputs
         during feed forward step.
 
@@ -81,7 +79,7 @@ class Layer(object):
 
         This function sets the input values of the entire network
         """
-        if self.input_shape is not None:
+        if not self.is_input_layer or self.is_output_layer:
             raise ValueError("Cannot set values of hidden layers. Make sure you are ",
                 "setting the values of the input layer")
         if len(values) != len(self.nodes):
@@ -121,6 +119,21 @@ class Layer(object):
                 loss += square_error(self.nodes[i].value, self.expected_output_values[i])
         return loss
 
+    def calculate_differential_loss_matrix(self):
+        """
+        Used in the output layer.
+
+        We know the square error loss function is used,
+        so we will use the differential of that function
+        """
+        if not self.is_output_layer:
+            return
+        differential_loss_matrix = []
+        for i in range(len(self.nodes)):
+            differential_node_loss = square_error_differential(self.layer_output_matrix[i], self.expected_output_values[i])
+            differential_loss_matrix.append(differential_node_loss)
+        self.differential_loss_matrix = differential_loss_matrix
+
     def __forward_update(self, layer_input_matrix):
         """
         :param weighted_sums: type list(float). the dot product of each node's weights with the input nodes' values
@@ -142,11 +155,26 @@ class Layer(object):
 
         We do that using the gradient of the loss function.
         """
-        current_activation_outputs = [node.value for node in self.nodes]
+        self.loss_differentials_wrt_activation_output = []
+        self.activation_differentials_wrt_node_input = []
+
         for current_index in range(len(self.nodes)):
             current_node = self.nodes[current_index]
+
+            print(f'before back prop on node: {current_index}')
+            print(current_node.weights)
+
+            current_activation_value = current_node.value
+            loss_differential = square_error_differential(
+                    current_activation_value,
+                    self.expected_output_values[current_index]
+                )
+            activation_differential = softmax_differential(self.layer_input_matrix, current_index)
+            
+            self.loss_differentials_wrt_activation_output.append(loss_differential)
+            self.activation_differentials_wrt_node_input.append(activation_differential)
+
             for i in range(len(current_node.weights)):
-                current_activation_value = current_node.value
                 '''
                 These are the three components of the gradient in the output layer.
 
@@ -154,49 +182,90 @@ class Layer(object):
                 of various functions, so we use the multivariable chain rule to
                 differentiate and find the gradient.
                 '''
-                square_error_loss_differential = square_error_differential(current_activation_value, self.expected_output_values[current_index])
-                activation_differential = softmax_differential(current_activation_outputs, i)
                 previous_activation_value = self.previous_layer.nodes[i].value
-
                 '''
                 We then multiply all of those values together, with the learning rate,
                 and update the weight for which we are considering
                 '''
-                total_differential = square_error_loss_differential * activation_differential * previous_activation_value
-                current_node.weights[i] = total_differential * 0.001
+                total_differential = loss_differential * activation_differential * previous_activation_value
+                current_node.weights[i] = current_node.weights[i] - (total_differential * 0.01)
+            
+            print(f'after back prop on node {current_index}')
+            print(current_node.weights)
+            print('\n')
 
     def __back_propagate_sigmoid(self):
         """
+        We know we are in a hidden layer here, so we do the calculation
+        a bit differently.
+
+
         """
+        self.loss_differentials_wrt_activation_output = []
+        self.activation_differentials_wrt_node_input = []
+
         for current_index in range(len(self.nodes)):
             current_node = self.nodes[current_index]
+            
+            print(f'before back prop on node {current_index}')
+            print(current_node.weights)
+
+            activation_differential = sigmoid_differential(self.layer_input_matrix[current_index])
+
+            self.activation_differentials_wrt_node_input.append(activation_differential)
+            
+            loss_differential = 0
+            for next_node_index in range(len(self.next_layer.nodes)):
+                next_layer_loss_differential = self.next_layer.loss_differentials_wrt_activation_output[next_node_index]
+                next_layer_activation_differential = self.next_layer.activation_differentials_wrt_node_input[next_node_index]
+                weight_between_this_node_and_that_node = self.next_layer.nodes[next_node_index].weights[current_index]
+                loss_differential += (next_layer_loss_differential * next_layer_activation_differential * weight_between_this_node_and_that_node)
+            
+            self.loss_differentials_wrt_activation_output.append(loss_differential)
+
             for i in range(len(current_node.weights)):
-                current_activation_value = current_node.value
-
-                # TODO understand where the differential of the loss function plays into hidden layers
-                square_error_loss_differential = square_error_differential(current_activation_value, 5)
-                # TODO Fix this to accept the input to the node, not activation output
-                activation_differential = sigmoid_differential(current_node.value)
-
                 previous_activation_value = self.previous_layer.nodes[i].value
-
-                total_differential = square_error_loss_differential * activation_differential * previous_activation_value
-                current_node.weights[i] = total_differential * 0.01
+                total_differential = loss_differential * activation_differential * previous_activation_value
+                current_node.weights[i] = current_node.weights[i] - (total_differential * 0.01)
     
+            print(f'after back prop on node {current_index}')
+            print(current_node.weights)
+            print('\n')
+
     def __back_propagate_relu(self):
         """
+        We know we are in a hidden layer here, so we do the calculation
+        somewhat differently.
+
+        
         """
+        self.loss_differentials_wrt_activation_output = []
+        self.activation_differentials_wrt_node_input = []
+
         for current_index in range(len(self.nodes)):
             current_node = self.nodes[current_index]
+            
+            print(f'before back prop on node {current_index}')
+            print(current_node.weights)
+
+            activation_differential = relu_differential(self.layer_input_matrix[current_index])
+
+            self.activation_differentials_wrt_node_input.append(activation_differential)
+            
+            loss_differential = 0
+            for next_node_index in range(len(self.next_layer.nodes)):
+                next_layer_loss_differential = self.next_layer.loss_differentials_wrt_activation_output[next_node_index]
+                next_layer_activation_differential = self.next_layer.activation_differentials_wrt_node_input[next_node_index]
+                weight_between_this_node_and_that_node = self.next_layer.nodes[next_node_index].weights[current_index]
+                loss_differential += (next_layer_loss_differential * next_layer_activation_differential * weight_between_this_node_and_that_node)
+            
+            self.loss_differentials_wrt_activation_output.append(loss_differential)
+
             for i in range(len(current_node.weights)):
-                current_activation_value = current_node.value
-
-                # TODO understand where the differential of the loss function plays into hidden layers
-                square_error_loss_differential = square_error_differential(current_activation_value, 5)
-                # TODO Fix this to accept the input to the node, not activation output
-                activation_differential = relu_differential(current_node.value)
-
                 previous_activation_value = self.previous_layer.nodes[i].value
-
-                total_differential = square_error_loss_differential * activation_differential * previous_activation_value
-                current_node.weights[i] = total_differential * 0.01
+                total_differential = loss_differential * activation_differential * previous_activation_value
+                current_node.weights[i] = current_node.weights[i] - (total_differential * 0.01)
+    
+            print(f'after back prop on node {current_index}')
+            print(current_node.weights)
+            print('\n')

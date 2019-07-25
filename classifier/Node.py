@@ -6,18 +6,16 @@ class Node(object):
     Object to represent a node in a neural network
     """
 
-    def __init__(self, number_of_inputs=None):
+    def __init__(self, number_of_inputs):
         """
-        :param number_of_inputs: type int. the number of inputs into this node
+        :param number_of_inputs: type int. the number of inputs into this node. 
+                                0 if it's in the input layer.
         
         The weights here are represented as an array, where the value at
         i is the weight between this node, and the ith previous node
         """
         self.value = 0
-        if number_of_inputs is None:
-            self.weights = None
-        else:
-            self.weights = [uniform(0, number_of_inputs) for _ in range(number_of_inputs)]
+        self.weights = [uniform(0, number_of_inputs) for _ in range(number_of_inputs)]
 
     def forward_update(self, activation_function, layer_input_matrix, index):
         """

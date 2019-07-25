@@ -103,26 +103,29 @@ class Network(object):
     
     def __back_propagate_recursive(self, starting_layer_number):
         if starting_layer_number == 1:
+            print('Reached input layer; done back propagating')
             return
         current_layer = self.layers[starting_layer_number - 1]
         current_layer.back_propagate()
+        print(f'done with layer: {starting_layer_number}\n')
         self.__back_propagate_recursive(starting_layer_number - 1)
 
 
 if __name__ == "__main__":
-    input_values = [2, 4, 6]
+    input_values = [2, 4, 6, 8, 10, 12, 14, 15]
     output_values = [1, 0]
 
     network = Network()
-    layer1 = Layer(3) # input layer - we don't need an activation function here
-    
-    layer2 = Layer(4, input_shape=3) # hidden layer
-    layer2.set_activation_function('relu')
+    layer1 = Layer(number_of_nodes=len(input_values)) # input layer - we don't need an activation function here
 
-    layer3 = Layer(2, input_shape=4)
-    layer3.set_activation_function('sigmoid')
+    layer2 = Layer(number_of_nodes=4, number_of_inputs=len(input_values)) # hidden layer
+    layer2.set_activation_function('sigmoid')
 
-    layer4 = Layer(2, input_shape=2)
+    layer3 = Layer(number_of_nodes=2, number_of_inputs=4)
+    layer3.set_activation_function('relu')
+
+    # The output layer should use softmax for conversion to probabilities
+    layer4 = Layer(number_of_nodes=len(output_values), number_of_inputs=2)
     layer4.set_activation_function('softmax')
 
     network.add_layer(layer1)

@@ -1,5 +1,11 @@
 from math import exp, pow
 
+"""
+A suite of functions used
+in the activation function process
+as well as back propagation.
+"""
+
 def sigmoid(x):
   return 1 / (1 + exp(x * -1))
 
