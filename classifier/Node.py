@@ -31,7 +31,9 @@ class Node(object):
 
     def forward_update(self, activation_function, layer_input_matrix, index):
         """
-        :param weighted_input: type int. the dot product of this node's weights with the previous layer's node values
+        :param activation_function: type str. The activation function to be used in this node
+        :param layer_input_matrix: type list. The matrix of weighted sums into this layer
+        :param index: type int. The index of this node in the layer
 
         Updates the value of this node with the dot product, and subsequently the activated value
         """
@@ -40,6 +42,7 @@ class Node(object):
 
     def __apply_activation_function(self, activation_function, layer_input_matrix, index):
         """
+        :param activation_function: type str. The activation function to be used in the layer
         :param layer_input_matrix: type list. The input values to the nodes in this layer,
             the weighted sum of the previous layer's nodes and the weights in each node in this layer
         :param index: The index of this node in the layer matrix

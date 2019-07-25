@@ -1,4 +1,4 @@
-from math import exp, pow
+from math import exp
 
 """
 A suite of functions used
@@ -11,7 +11,7 @@ def sigmoid(x):
 
 def sigmoid_differential(x):
     numerator = exp(x * -1)
-    denominator = pow( (1 + numerator), 2 )
+    denominator = (1 + numerator) ** 2
     return numerator / denominator
 
 def relu(x):
@@ -31,7 +31,7 @@ def softmax_differential(values, index):
     return softmax_at_index * (1 - softmax_at_index)
 
 def square_error(a, b):
-    return pow( (a - b), 2 )
+    return (a - b) ** 2
 
 def square_error_differential(a, b):
     return 2 * (a - b)

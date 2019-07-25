@@ -19,8 +19,8 @@ class Network(object):
         """
         :param layer: type Layer. A layer to be added to the network
         """
-        if layer is None:
-            raise ValueError('Make sure you create a layer before adding it to the network')
+        if layer is None or not isinstance(layer, Layer):
+            raise ValueError('Make sure you create a type Layer before adding it to the network')
         if len(self.layers) is 0:
             layer.set_as_input_layer()
             self.layers.append(layer)
@@ -72,7 +72,7 @@ class Network(object):
         
         self.layers[len(self.layers) - 1].set_expected_output_values(expected_output_values[0])
 
-    def set_learning_rate(self, learning_rate):
+    def set_learning_rate(self, learning_rate=0.01):
         """
         :param learning_rate: type float. The learning rate for the network
         """
@@ -89,14 +89,14 @@ class Network(object):
         """
         Function for back propagating the neural network
         """
-        print('Beginning backpropagation')
+        # print('Beginning backpropagation')
         self.__back_propagate_recursive(starting_layer_number=len(self.layers))
 
     def predict(self, test_data):
         """
-        :param test_dat: type list. Function for predicting output
-        on test data
+        :param test_data: type list. Function for predicting output on test data
         """
+        pass
 
     def __feed_forward_recursively(self, starting_layer_number):
         """
@@ -116,8 +116,8 @@ class Network(object):
         next_layer = self.layers[starting_layer_number]
         next_layer.forward_update(initial_node_values)
 
-        print([node.value for node in next_layer.nodes])
-        print(f'done with layer: {starting_layer_number}')
+        # print([node.value for node in next_layer.nodes])
+        # print(f'done with layer: {starting_layer_number}')
 
         self.__feed_forward_recursively(starting_layer_number + 1)
     
@@ -128,11 +128,11 @@ class Network(object):
         Recursively applies back propagation through the network until the input layer.
         """
         if starting_layer_number == 1:
-            print('Reached input layer; done back propagating')
+            # print('Reached input layer; done back propagating')
             return
         current_layer = self.layers[starting_layer_number - 1]
         current_layer.back_propagate()
-        print(f'done with layer: {starting_layer_number}\n')
+        # print(f'done with layer: {starting_layer_number}\n')
         self.__back_propagate_recursive(starting_layer_number - 1)
 
 
@@ -163,11 +163,13 @@ if __name__ == "__main__":
     network.add_layer(layer3)
     network.add_layer(layer4)
 
+    network.set_learning_rate(0.01)
+
     network.set_input_values(input_values)
     network.set_expected_output_values(output_values)
 
     for i in range(50):
         network.feed_forward() # feed forward from input to layer 2
-        print('\n')
+        # print('\n')
         network.back_propagate()
-        print(f'Done with round: {i}')
+        # print(f'Done with round: {i}')

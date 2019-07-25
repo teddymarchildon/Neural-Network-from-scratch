@@ -20,15 +20,15 @@ class Layer(object):
 
     def __init__(self, number_of_nodes, number_of_inputs=0):
         """
-        :param size: type int. the number of nodes in this layer
+        :param number_of_nodes: type int. the number of nodes in this layer
+        :param number_of_inputs: type int. The number of nodes in the previous layer
         """
-        self.number_of_nodes = number_of_nodes
-        self.nodes = []
         self.is_input_layer = False
         self.is_output_layer = False
         self.previous_layer = None
         self.next_layer = None
         self.set_learning_rate()
+        self.nodes = []
         for _ in range(number_of_nodes):
             self.nodes.append(Node(number_of_inputs=number_of_inputs))
 
@@ -41,7 +41,7 @@ class Layer(object):
 
         It applies the activation function over the nodes in the layer.
         """
-        print("Applying %s activation function" % (self.activation_function))
+        # print("Applying %s activation function" % (self.activation_function))
         layer_input_matrix = []
         for node in self.nodes:
             input_for_node = dot_product(node_input_values, node.weights)
@@ -144,7 +144,7 @@ class Layer(object):
 
     def __forward_update(self, layer_input_matrix):
         """
-        :param weighted_sums: type list(float). the dot product of each node's weights with the input nodes' values
+        :param layer_input_matrix: type list(float). the dot product of each node's weights with the input nodes' values
 
         This function applies the softmax function to the nodes in the layer
         """
@@ -169,8 +169,8 @@ class Layer(object):
         for current_index in range(len(self.nodes)):
             current_node = self.nodes[current_index]
 
-            print(f'before back prop on node: {current_index}')
-            print(current_node.weights)
+            # print(f'before back prop on node: {current_index}')
+            # print(current_node.weights)
 
             current_activation_value = current_node.value
             loss_differential = square_error_differential(
@@ -196,11 +196,11 @@ class Layer(object):
                 and update the weight for which we are considering
                 '''
                 total_differential = loss_differential * activation_differential * previous_activation_value
-                current_node.weights[i] = current_node.weights[i] - (total_differential * self.learning_rate)
+                current_node.weights[i] -= total_differential * self.learning_rate
             
-            print(f'after back prop on node {current_index}')
-            print(current_node.weights)
-            print('\n')
+            # print(f'after back prop on node {current_index}')
+            # print(current_node.weights)
+            # print('\n')
 
     def __back_propagate_hidden_layer(self, activation_function_differential):
         """
@@ -216,8 +216,8 @@ class Layer(object):
         for current_index in range(len(self.nodes)):
             current_node = self.nodes[current_index]
             
-            print(f'before back prop on node {current_index}')
-            print(current_node.weights)
+            # print(f'before back prop on node {current_index}')
+            # print(current_node.weights)
 
             activation_differential = activation_function_differential(self.layer_input_matrix[current_index])
 
@@ -235,8 +235,8 @@ class Layer(object):
             for i in range(len(current_node.weights)):
                 previous_activation_value = self.previous_layer.nodes[i].value
                 total_differential = loss_differential * activation_differential * previous_activation_value
-                current_node.weights[i] = current_node.weights[i] - (total_differential * self.learning_rate)
+                current_node.weights[i] -= total_differential * self.learning_rate
     
-            print(f'after back prop on node {current_index}')
-            print(current_node.weights)
-            print('\n')
+            # print(f'after back prop on node {current_index}')
+            # print(current_node.weights)
+            # print('\n')
