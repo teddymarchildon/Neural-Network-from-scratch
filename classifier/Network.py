@@ -132,7 +132,7 @@ class Network(object):
 
 if __name__ == "__main__":
     input_values = [[2, 4, 6, 8, 10, 12, 14, 15]]
-    output_values = [[1, 0]]
+    output_values = [[1, 0, 0]]
 
     network = Network()
 
@@ -140,10 +140,10 @@ if __name__ == "__main__":
     layer1 = Layer(number_of_nodes=len(input_values[0]))
 
     layer2 = Layer(number_of_nodes=4, number_of_inputs=len(input_values[0])) # hidden layer
-    layer2.set_activation_function('sigmoid')
+    layer2.set_activation_function('relu')
 
     layer3 = Layer(number_of_nodes=2, number_of_inputs=4)
-    layer3.set_activation_function('relu')
+    layer3.set_activation_function('sigmoid')
 
     # The output layer should use softmax for conversion to probabilities
     layer4 = Layer(number_of_nodes=len(output_values[0]), number_of_inputs=2)
@@ -157,7 +157,7 @@ if __name__ == "__main__":
     network.set_input_values(input_values)
     network.set_expected_output_values(output_values)
 
-    for i in range(10):
+    for i in range(5):
         network.feed_forward() # feed forward from input to layer 2
         print('\n')
         network.back_propagate()

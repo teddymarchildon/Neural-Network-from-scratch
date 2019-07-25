@@ -1,9 +1,6 @@
 """
 Defines a set of functions to be used on various math structures
 """
-
-from Matrix import Matrix
-
 def dot_product(vector1, vector2):
 	"""
 	:param vector1: the first matrix in the dot product
