@@ -89,8 +89,14 @@ class Network(object):
         """
         Function for back propagating the neural network
         """
-        print('Back propagating')
+        print('Beginning backpropagation')
         self.__back_propagate_recursive(starting_layer_number=len(self.layers))
+
+    def predict(self, test_data):
+        """
+        :param test_dat: type list. Function for predicting output
+        on test data
+        """
 
     def __feed_forward_recursively(self, starting_layer_number):
         """
@@ -134,6 +140,9 @@ if __name__ == "__main__":
     input_values = [[2, 4, 6, 8, 10, 12, 14, 15]]
     output_values = [[1, 0, 0]]
 
+    for _ in range(250):
+        input_values[0].append(5)
+
     network = Network()
 
     # input layer - we don't need an activation function here
@@ -157,7 +166,7 @@ if __name__ == "__main__":
     network.set_input_values(input_values)
     network.set_expected_output_values(output_values)
 
-    for i in range(5):
+    for i in range(50):
         network.feed_forward() # feed forward from input to layer 2
         print('\n')
         network.back_propagate()

@@ -1,4 +1,4 @@
-from random import uniform
+from random import gauss
 from math import sqrt
 from activation_functions import sigmoid, relu, softmax
 
@@ -19,11 +19,13 @@ class Node(object):
         unstable gradient issues that may arise. This centers the variance
         of the weights coming into this node at 1 / number of inputs to 
         the node.
+
+        The weight is random value pulled from a Normal(0, 1) distribution.
         """
         self.value = 0
         if number_of_inputs > 0:
             xavier_coefficient = sqrt(1 / number_of_inputs)
-            self.weights = [uniform(-1, 1)*xavier_coefficient for _ in range(number_of_inputs)]
+            self.weights = [gauss(0, 1)*xavier_coefficient for _ in range(number_of_inputs)]
         else: # No weights coming into a node in the input layer
             self.weights = []
 
